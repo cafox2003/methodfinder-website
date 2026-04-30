@@ -44,8 +44,8 @@
             </p>
             <p class="hero-body">
               MethodFinder explores solving methods at scale. Methods are written in a
-              DSL, executed step-by-step through a constrained solver, turned into
-              features, and ranked by a learned oracle so the expensive solver can focus
+              DSL, executed step-by-step through a custom solver, and turned into
+              features. They are ranked by a learned ML oracle so the expensive solver can focus
               on the most interesting candidates.
             </p>
             <div class="cta-row">
@@ -103,21 +103,19 @@
               <h3>Why</h3>
               <p>
                 There are far more plausible cube methods than anyone can test by hand.
-                Repeated constrained solves quickly become the bottleneck.
+                MethodFinder aims to provide a framework for searching, evaluating, and comparing thousands of methods.
               </p>
             </article>
             <article class="panel">
               <h3>Scope</h3>
               <p>
-                This is not a neural cube solver. It works at the method level: represent,
-                execute, score, and rank structured solving strategies.
+              MethodFinder evaluates custom methods by representing them, solving them, and assigning scores.
               </p>
             </article>
             <article class="panel">
-              <h3>Audience</h3>
+              <h3>Goal</h3>
               <p>
-                The site is meant to be interesting to both project reviewers and cubers
-                who care whether a generated method might actually be worth looking at.
+              MethodFinder is built to predict how well a method will score. Then, it uses those predictions to search for approaches that can compete methods like CFOP and Roux.
               </p>
             </article>
           </div>
@@ -139,7 +137,7 @@
               <p>Structured step definitions.</p>
             </div>
             <div class="diagram-arrow">→</div>
-            <div class="diagram-node diagram-node-parent">
+            <div class="diagram-node">
               <span class="card-label">Runner</span>
               <strong>Method Engine</strong>
               <p>Groups, constraints, rotations, and backend orchestration.</p>
@@ -156,25 +154,21 @@
             <article class="panel">
               <h3>Core DSL</h3>
               <p>
-                Methods are files, not hardcoded classes. Steps, groups, removes,
-                rotations, symmetry options, cache flags, and free-layer hints all live in
-                the same representation.
+                Methods are files, written in a custom Domain Specific Language (DSL). The DSL allows for definition of steps, groups, removes,
+                rotations, symmetry options, and algorithm caching.
               </p>
             </article>
             <article class="panel">
               <h3>Runner</h3>
               <p>
-                A Python execution engine decomposes a method into step-level solver calls,
-                tracks accumulated constraints, chooses orientations, and records
-                per-step move sequences.
+                A Python execution engine decomposes a method into the individual steps. It handles the internal backend calls, as well as choosing between steps in a group.
               </p>
             </article>
             <article class="panel">
               <h3>Scale</h3>
               <p>
                 Parallel solve generation, memory-aware worker limits, and algorithm
-                caching are built into the same workflow instead of being bolted on after
-                the fact.
+                caching are built into the same workflow. This allows the solver to take advantage of large amounts of compute and memory.
               </p>
             </article>
           </div>
@@ -184,8 +178,7 @@
           <div class="section-heading">
             <h2>Solver</h2>
             <p class="section-lead">
-              The backend is not one giant solve call. It is a repeated translation from
-              method intent into concrete solver queries.
+ The solver breaks each method into smaller constrained solver queries. It schedules those queries efficiently to benchmark many candidates at scale.
             </p>
           </div>
           <div class="split-layout">
@@ -197,8 +190,7 @@
                 <code>kube_solver</code> binary as a subprocess.
               </p>
               <p>
-                That makes the project feel more like orchestration infrastructure than a
-                single ML demo script.
+                That makes the project have concrete reusable components, rather than being a simple script.
               </p>
               <div class="thread-graph" aria-hidden="true">
                 <div class="thread-root">solve queue</div>
@@ -268,8 +260,8 @@
           <div class="section-heading">
             <h2>DSL</h2>
             <p class="section-lead">
-              A full method file makes the project easier to understand than a paragraph
-              of abstraction.
+              The raw definition of a method, written in the custom method DSL.
+              
             </p>
           </div>
           <div class="split-layout">
@@ -322,7 +314,7 @@ add_corner DFL
               <p>
                 The DSL describes what must be solved, not the exact move sequence a human
                 should execute. That lets the rest of the system treat methods as
-                structured programs with directives, groups, and cache hints.
+                structured programs without ambiguity.
               </p>
             </div>
           </div>
@@ -418,7 +410,7 @@ add_corner DFL
 
               <p>
               ML-selected Roux mutation. Predicted to be a strong candidate, then verified against the solver benchmark.<br><br>
-              Raw score: 0.024752.
+              Raw score: 0.024752
               </p>
             </article>
 
@@ -446,8 +438,8 @@ add_corner DFL
                 <span>moves</span>
               </div>
 
-              <p> Traditional Roux method used as the comparison baseline. <br><br><br>
-              Raw score: 0.023606. </p>
+              <p> Traditional Roux method used as the comparison baseline. <br><br>
+              Raw score: 0.023606 </p>
             </article>
 
 
@@ -477,7 +469,7 @@ add_corner DFL
                 <span>moves</span>
               </div>
               <p> CFOP with best_1 F2L pair ordering. It solves more moves in this benchmark and scored lower than Roux. <br><br>
-              Raw score: 0.019125.
+              Raw score: 0.019125
               </p>
             </article>
           </div>
@@ -487,7 +479,7 @@ add_corner DFL
           <div class="section-heading">
             <h2>Limits</h2>
             <p class="section-lead">
-              The project can find efficient candidates, but that is not the same thing as
+              The project can find high scoring candidates, but that is not the same thing as
               proving a method is good for human speedsolving.
             </p>
           </div>
@@ -502,7 +494,7 @@ add_corner DFL
             <article class="panel">
               <h3>Solver</h3>
               <p>
-                A constrained backend can exploit large phases in ways that do not map
+                A constrained backend can optimize for high scoring methods in ways that do not map
                 cleanly to practical speedsolving.
               </p>
             </parameter>
