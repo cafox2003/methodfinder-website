@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MethodFinder | ML-Guided Rubik's Cube Method Search</title>
+    <meta
+      name="description"
+      content="MethodFinder is a backend-heavy pipeline for representing, evaluating, and ranking Rubik's Cube solving methods with a classical solver and a learned oracle."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="#top">MethodFinder</a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+          Menu
+        </button>
+        <nav id="site-nav" class="site-nav">
+          <a href="#overview">Overview</a>
+          <a href="#architecture">Architecture</a>
+          <a href="#solver">Solver</a>
+          <a href="#pipeline">Pipeline</a>
+          <a href="#oracle">Oracle</a>
+          <a href="#demo">Demo</a>
+          <a href="#limits">Limits</a>
+          <a href="#links">Links</a>
+        </nav>
+      </header>
+
+      <main id="top">
+        <section class="hero section">
+          <div class="hero-copy">
+            <h1>MethodFinder</h1>
+            <p class="hero-subhead">
+              Search infrastructure for Rubik's Cube methods.
+            </p>
+            <p class="hero-body">
+              MethodFinder explores solving methods at scale. Methods are written in a
+              DSL, executed step-by-step through a constrained solver, turned into
+              features, and ranked by a learned oracle so the expensive solver can focus
+              on the most interesting candidates.
+            </p>
+            <div class="cta-row">
+              <a class="button button-primary" href="#architecture">See Architecture</a>
+              <a class="button button-secondary" href="#demo">See Demo</a>
+            </div>
+          </div>
+
+          <div class="hero-graphic">
+            <div class="hero-grid">
+              <div class="hero-card">
+                <span class="card-label">Representation</span>
+                <strong>Method DSL</strong>
+                <p>Steps, constraints, groups, orientations, and cacheable phases.</p>
+              </div>
+              <div class="hero-card">
+                <span class="card-label">Execution</span>
+                <strong>Solver Runner</strong>
+                <p>Orientation search, subprocess orchestration, caching, and solve traces.</p>
+              </div>
+              <div class="hero-card hero-accent">
+                <span class="card-label">Search</span>
+                <strong>Method Ranking</strong>
+                <p>Use ML to triage large method sets before full verification.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stat-band">
+          <div class="stat-chip">
+            <span class="stat-value">DSL first</span>
+            <span class="stat-label">methods are structured programs</span>
+          </div>
+          <div class="stat-chip">
+            <span class="stat-value">Classical solver</span>
+            <span class="stat-label">step-level execution creates the labels</span>
+          </div>
+          <div class="stat-chip">
+            <span class="stat-value">ML oracle</span>
+            <span class="stat-label">prediction reduces brute-force pressure</span>
+          </div>
+        </section>
+
+        <section id="overview" class="section">
+          <div class="section-heading">
+            <h2>Overview</h2>
+            <p class="section-lead">
+              The core idea is simple: evaluating methods is expensive, so MethodFinder
+              learns to rank them before paying the full solve cost.
+            </p>
+          </div>
+          <div class="three-up">
+            <article class="panel">
+              <h3>Why</h3>
+              <p>
+                There are far more plausible cube methods than anyone can test by hand.
+                Repeated constrained solves quickly become the bottleneck.
+              </p>
+            </article>
+            <article class="panel">
+              <h3>Scope</h3>
+              <p>
+                This is not a neural cube solver. It works at the method level: represent,
+                execute, score, and rank structured solving strategies.
+              </p>
+            </article>
+            <article class="panel">
+              <h3>Audience</h3>
+              <p>
+                The site is meant to be interesting to both project reviewers and cubers
+                who care whether a generated method might actually be worth looking at.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="architecture" class="section">
+          <div class="section-heading">
+            <h2>Architecture</h2>
+            <p class="section-lead">
+              The interesting part is the pipeline around the solver: representation,
+              orchestration, cached execution, dataset generation, and ranking.
+            </p>
+          </div>
+
+          <div class="diagram panel">
+            <div class="diagram-node">
+              <span class="card-label">Input</span>
+              <strong>DSL Methods</strong>
+              <p>Structured step definitions.</p>
+            </div>
+            <div class="diagram-arrow">→</div>
+            <div class="diagram-node diagram-node-parent">
+              <span class="card-label">Runner</span>
+              <strong>Method Engine</strong>
+              <p>Groups, constraints, rotations, and backend orchestration.</p>
+            </div>
+            <div class="diagram-arrow">→</div>
+            <div class="diagram-node">
+              <span class="card-label">Output</span>
+              <strong>Workspace Data</strong>
+              <p>Solves, caches, features, scores.</p>
+            </div>
+          </div>
+
+          <div class="architecture-grid">
+            <article class="panel">
+              <h3>Core DSL</h3>
+              <p>
+                Methods are files, not hardcoded classes. Steps, groups, removes,
+                rotations, symmetry options, cache flags, and free-layer hints all live in
+                the same representation.
+              </p>
+            </article>
+            <article class="panel">
+              <h3>Runner</h3>
+              <p>
+                A Python execution engine decomposes a method into step-level solver calls,
+                tracks accumulated constraints, chooses orientations, and records
+                per-step move sequences.
+              </p>
+            </article>
+            <article class="panel">
+              <h3>Scale</h3>
+              <p>
+                Parallel solve generation, memory-aware worker limits, and algorithm
+                caching are built into the same workflow instead of being bolted on after
+                the fact.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="solver" class="section">
+          <div class="section-heading">
+            <h2>Solver</h2>
+            <p class="section-lead">
+              The backend is not one giant solve call. It is a repeated translation from
+              method intent into concrete solver queries.
+            </p>
+          </div>
+          <div class="split-layout">
+            <div class="panel">
+              <h3>Execution</h3>
+              <p>
+                The runner builds solver input from the current step, accumulated
+                constraints, and current state, then invokes the external
+                <code>kube_solver</code> binary as a subprocess.
+              </p>
+              <p>
+                That makes the project feel more like orchestration infrastructure than a
+                single ML demo script.
+              </p>
+              <div class="thread-graph" aria-hidden="true">
+                <div class="thread-root">solve queue</div>
+                <div class="thread-branches">
+                  <span>worker 1</span>
+                  <span>worker 2</span>
+                  <span class="thread-more">...</span>
+                  <span>worker n</span>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <h3>Details</h3>
+              <ul class="flat-list">
+                <li>Orientation search evaluates candidate symmetries before committing to a frame.</li>
+                <li>Quick-out checks try to skip trivial steps cheaply.</li>
+                <li>Cacheable phases can reuse saved algorithms before a full solve.</li>
+                <li>Parallel generation uses a process pool with memory-based worker limits.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="pipeline" class="section">
+          <div class="section-heading">
+            <h2>Pipeline</h2>
+            <p class="section-lead">
+              The full loop starts with method structure, produces solver traces, and ends
+              with a cheap ranking pass over new candidates.
+            </p>
+          </div>
+          <div class="pipeline">
+            <article class="pipeline-step">
+              <span class="step-number">01</span>
+              <h3>Define</h3>
+              <p>Write methods in the DSL.</p>
+            </article>
+            <article class="pipeline-step">
+              <span class="step-number">02</span>
+              <h3>Quantify</h3>
+              <p>Extract structural features.</p>
+            </article>
+            <article class="pipeline-step">
+              <span class="step-number">03</span>
+              <h3>Solve</h3>
+              <p>Run classical constrained evaluation.</p>
+            </article>
+            <article class="pipeline-step">
+              <span class="step-number">04</span>
+              <h3>Score</h3>
+              <p>Turn solve behavior into a target.</p>
+            </article>
+            <article class="pipeline-step">
+              <span class="step-number">05</span>
+              <h3>Train</h3>
+              <p>Fit the oracle on features and scores.</p>
+            </article>
+            <article class="pipeline-step">
+              <span class="step-number">06</span>
+              <h3>Rank</h3>
+              <p>Screen new methods before verification.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-heading">
+            <h2>DSL</h2>
+            <p class="section-lead">
+              A full method file makes the project easier to understand than a paragraph
+              of abstraction.
+            </p>
+          </div>
+          <div class="split-layout">
+            <div class="code-panel">
+              <pre><code>[METHOD: CFOP| rotation=x2]
+[STEP: cross]
+
+init_empty_cube
+add_edge UF
+add_edge UB
+add_edge UR
+add_edge UL
+
+[GROUP: F2L | order=best_1]
+  [STEP: pair_fr]
+  add_edge BR
+  add_corner UBR
+
+  [STEP: pair_fl]
+  add_edge BL
+  add_corner UBL
+
+  [STEP: pair_bl]
+  add_edge FL
+  add_corner UFL
+
+  [STEP: pair_br]
+  add_edge FR
+  add_corner UFR
+
+[END GROUP]
+
+[STEP: oll | cache_alg=true | free_layer=D]
+add_edges_orientation
+
+[STEP: pll | cache_alg=true | free_layer=D]
+
+add_edge FD
+add_edge BD
+add_edge LD
+add_edge RD
+add_corner DFR
+add_corner DBR
+add_corner DBL
+add_corner DFL
+[END METHOD]</code></pre>
+            </div>
+            <div class="panel">
+              <h3>Meaning</h3>
+              <p>
+                The DSL describes what must be solved, not the exact move sequence a human
+                should execute. That lets the rest of the system treat methods as
+                structured programs with directives, groups, and cache hints.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="oracle" class="section">
+          <div class="section-heading">
+            <h2>Oracle</h2>
+            <p class="section-lead">
+              The ML layer matters because it lets the system search more broadly, not
+              because it replaces the classical solver.
+            </p>
+          </div>
+          <div class="split-layout oracle-layout">
+            <div class="panel">
+              <h3>Models</h3>
+              <p>
+                Linear Regression provides a simple baseline. Random Forest handles the
+                nonlinear structure better and performed more accurately in the presented
+                experiment.
+              </p>
+              <div class="feature-band">
+                <span>num_steps</span>
+                <span>num_groups</span>
+                <span>avg_constraints_per_step</span>
+                <span>symmetry_depth</span>
+                <span>num_cache_alg_steps</span>
+                <span>constraint_type_diversity</span>
+              </div>
+            </div>
+            <div class="panel table-panel">
+              <h3>Results</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>MAE</th>
+                    <th>MAPE</th>
+                    <th>Max Over</th>
+                    <th>Max Under</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Random Forest</td>
+                    <td>0.000797</td>
+                    <td>9.22%</td>
+                    <td>+0.003340</td>
+                    <td>-0.006893</td>
+                  </tr>
+                  <tr>
+                    <td>Linear Regression</td>
+                    <td>0.001746</td>
+                    <td>20.62%</td>
+                    <td>+0.006084</td>
+                    <td>-0.013534</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="demo" class="section">
+          <div class="section-heading">
+            <h2>Demo</h2>
+            <p class="section-lead">Solve comparison between a ML Method, Roux, and CFOP. All solutions generated with the default method solver.</p>
+          </div>
+          <div class="demo-grid">
+            <article class="demo-card demo-player-card">
+              <span class="card-label">Demo Slot A</span>
+              <strong>ML Method</strong>
+              <div class="demo-player-frame">
+                <twisty-player
+                    width="420px"
+                    height="280px"
+                    experimental-setup-alg="U D2 R2 F L2 D2 R2 F2 L2 F' U2 R' U' B D2 U2 B U' L'
+"
+                    alg="x2 //orientation
+                         F R' F' L F' D' B' D2 //fb
+                         D' L' D U F2 //block_fl
+                         B' R' D R2 U' R' B D' U B //block_bl
+                         R' U L U' R U L' //cmll
+                         //eo
+                         U2 M2 U M' U2 M U' M2 //L6E"
+                    background="none"
+                    ></twisty-player>
+              </div>
+              <div class="move-count-badge">
+                <span class="move-count-value">--</span>
+                <span>moves</span>
+              </div>
+
+              <p>
+              ML-selected Roux mutation. Predicted to be a strong candidate, then verified against the solver benchmark.<br><br>
+              Raw score: 0.024752.
+              </p>
+            </article>
+
+            <article class="demo-card demo-player-card">
+              <span class="card-label">Demo Slot B</span>
+              <strong>Roux</strong>
+              <div class="demo-player-frame">
+                <twisty-player
+                    width="420px"
+                    height="280px"
+                    experimental-setup-alg="U D2 R2 F L2 D2 R2 F2 L2 F' U2 R' U' B D2 U2 B U' L'
+"
+                    alg="x2 //orientation
+                        D F' D L' R B2 L2 B D2 //fb
+                        L2 U L2 U2 l2 L2 U l2 //block_fl
+                        L U2 l2 L2 U l2 L //block_bl
+                        U' L2 F2 R' D' R F2 L' U L' U //cmll
+                        //eo
+                        M U2 M' U M U2 M U M2 U2 //L6E"
+                    background="none"
+                    ></twisty-player>
+              </div>
+              <div class="move-count-badge">
+                <span class="move-count-value">--</span>
+                <span>moves</span>
+              </div>
+
+              <p> Traditional Roux method used as the comparison baseline. <br><br><br>
+              Raw score: 0.023606. </p>
+            </article>
+
+
+            <article class="demo-card demo-player-card">
+              <span class="card-label">Demo Slot C</span>
+              <strong>CFOP</strong>
+              <div class="demo-player-frame">
+                <twisty-player
+                    width="420px"
+                    height="280px"
+                    experimental-setup-alg="U D2 R2 F L2 D2 R2 F2 L2 F' U2 R' U' B D2 U2 B U' L'
+"
+                    alg="x2 //orientation
+                         D2 U2 R D' B' R //cross
+                         L' F' L' U F L //pair_fl
+                         U2 B2 R B U R' B //pair_fr
+                         L R' U R U' L' //pair_bl
+                         F' L2 B2 L B2 L F //pair_br
+                         U2 R' F' R B R' U' F U R B' //oll
+                         U B2 R U' L U2 R' U L' R2 B2 R2 U B2 U2 //pll
+                         "
+                    background="none"
+                    ></twisty-player>
+              </div>
+              <div class="move-count-badge">
+                <span class="move-count-value">--</span>
+                <span>moves</span>
+              </div>
+              <p> CFOP with best_1 F2L pair ordering. It solves more moves in this benchmark and scored lower than Roux. <br><br>
+              Raw score: 0.019125.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="limits" class="section">
+          <div class="section-heading">
+            <h2>Limits</h2>
+            <p class="section-lead">
+              The project can find efficient candidates, but that is not the same thing as
+              proving a method is good for human speedsolving.
+            </p>
+          </div>
+          <div class="three-up">
+            <article class="panel">
+              <h3>Humans</h3>
+              <p>
+                Recognition, ergonomics, lookahead, finger tricks, and learning burden are
+                not fully captured by the current score.
+              </p>
+            </article>
+            <article class="panel">
+              <h3>Solver</h3>
+              <p>
+                A constrained backend can exploit large phases in ways that do not map
+                cleanly to practical speedsolving.
+              </p>
+            </parameter>
+            </article>
+            <article class="panel">
+              <h3>Target</h3>
+              <p>
+                The oracle learns the score you define. Better targets and better features
+                remain part of the future work.
+              </p>
+            </article>
+          </div>
+        </section>
+
+      <section id="links" class="section">
+        <div class="section-heading">
+          <h2>Links</h2>
+          <p class="section-lead">
+            Project materials, source code, and references.
+          </p>
+        </div>
+
+        <div class="links-grid">
+          <a class="link-card" href="https://github.com/cafox2003/cube-method-optimizer">
+            <span class="link-eyebrow">GitHub</span>
+            <strong>Code repository</strong>
+            <p>Source code for the DSL, solver runner, data pipeline, and ML oracle.</p>
+            <em>View repo →</em>
+          </a>
+
+          <a class="link-card" href="#" aria-disabled="true">
+            <span class="link-eyebrow">Writeup</span>
+            <strong>Paper / report</strong>
+            <p>Final project explanation, methodology, results, and limitations.</p>
+            <em>TBA</em>
+          </a>
+
+          <a class="link-card" href="https://docs.google.com/presentation/d/1a713iQzIIbAqaB5F-MXfaH0SHcKwMJNnpp5eyU-7WSA/edit?usp=sharing">
+            <span class="link-eyebrow">Slides</span>
+            <strong>Presentation deck</strong>
+            <p>Concise overview of the architecture, experiments, demo, and takeaways.</p>
+            <em>Open slides →</em>
+          </a>
+
+          <a class="link-card" href="https://github.com/kuba97531/kubesolver">
+            <span class="link-eyebrow">Backend</span>
+            <strong>kubesolver</strong>
+            <p>External classical cube solver used as the constrained search backend.</p>
+            <em>View project →</em>
+          </a>
+        </div>
+      </section>
+
+    <script src="https://cdn.cubing.net/v0/js/cubing/twisty" type="module"></script>
+    <script src="script.js"></script>
+    <script type="module">
+      import { Alg } from "https://cdn.cubing.net/v0/js/cubing/alg";
+  import { experimentalCountMoves } from "https://cdn.cubing.net/v0/js/cubing/notation";
+
+  document.querySelectorAll(".demo-player-card").forEach((card) => {
+    const player = card.querySelector("twisty-player");
+    const output = card.querySelector(".move-count-value");
+
+    if (!player || !output) return;
+
+    const algString = player.getAttribute("alg") ?? "";
+    const alg = new Alg(algString);
+
+    output.textContent = experimentalCountMoves(alg);
+  });
+    </script>
+  </body>
+</html>
