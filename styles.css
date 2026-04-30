@@ -518,6 +518,42 @@ th {
   height: 220px !important;
 }
 
+.demo-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0.15rem 0 0.85rem;
+}
+
+.demo-metrics > * {
+  min-width: 8.75rem;
+  justify-content: center;
+}
+
+.method-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.method-score-label {
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.method-score-value {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
 /* ── Links ── */
 .link-card {
   min-height: 180px;
@@ -594,6 +630,10 @@ th {
     min-height: auto;
     padding-top: 3rem;
   }
+
+  .demo-player-frame twisty-player {
+    max-width: 420px;
+  }
 }
 
 @media (max-width: 760px) {
@@ -640,7 +680,6 @@ th {
   display: inline-flex;
   align-items: baseline;
   gap: 0.35rem;
-  margin-top: 0.4rem;
   padding: 0.45rem 0.75rem;
   border: 1px solid var(--line);
   border-radius: 999px;
