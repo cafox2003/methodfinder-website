@@ -6,7 +6,7 @@
     <title>MethodFinder | ML-Guided Rubik's Cube Method Search</title>
     <meta
       name="description"
-      content="MethodFinder is a backend-heavy pipeline for representing, evaluating, and ranking Rubik's Cube solving methods with a classical solver and a learned oracle."
+      content="MethodFinder is a pipeline for evaluating custom Rubik’s Cube methods and using machine learning to rank and discover promising new candidates."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -59,17 +59,17 @@
               <div class="hero-card">
                 <span class="card-label">Representation</span>
                 <strong>Method DSL</strong>
-                <p>Steps, constraints, groups, orientations, and cacheable phases.</p>
+                <p> Methods are defined in a domain-specific language (DSL): simple enough to write by hand, but structured enough for automated parsing, mutation, and evaluation. </p>
               </div>
               <div class="hero-card">
                 <span class="card-label">Execution</span>
                 <strong>Solver Runner</strong>
-                <p>Orientation search, subprocess orchestration, caching, and solve traces.</p>
+                <p> A custom solver evaluates methods step by step, with performance optimizations such as algorithm caching, parallel execution, and memory-aware worker scheduling. </p>
               </div>
               <div class="hero-card hero-accent">
                 <span class="card-label">Search</span>
                 <strong>Method Ranking</strong>
-                <p>Use ML to triage large method sets before full verification.</p>
+                <p>Generates thousands of candidate methods and uses machine learning to identify the most promising ones. </p>
               </div>
             </div>
           </div>
